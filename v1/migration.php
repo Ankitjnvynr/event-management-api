@@ -61,3 +61,24 @@ $db->createTable($ceateActivityLogTableSql);
 
 
 
+$createEventsTableSql = 'CREATE TABLE IF NOT EXISTS events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT DEFAULT NULL,
+    start_time DATETIME NOT NULL,
+    end_time DATETIME NOT NULL,
+    is_all_day BOOLEAN DEFAULT FALSE,
+    location VARCHAR(255) DEFAULT NULL,
+    color VARCHAR(20) DEFAULT NULL,
+    organizer_name VARCHAR(255) DEFAULT NULL,
+    contact_phone VARCHAR(20) DEFAULT NULL,
+    contact_email VARCHAR(100) DEFAULT NULL,
+    website_url VARCHAR(255) DEFAULT NULL,
+    registration_link VARCHAR(255) DEFAULT NULL,
+    external_links TEXT DEFAULT NULL,
+    is_approved BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+)';
+
+$db->createTable($createEventsTableSql);
