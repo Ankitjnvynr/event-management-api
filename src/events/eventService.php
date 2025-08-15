@@ -45,32 +45,83 @@ class EventService
         ]);
     }
 
-    // Get events for admin (paginated)
-    public function getEventsAdmin($page = 1, $limit = 10)
+    public function getEventsAdmin($page = 1, $limit = 10, $filters = [])
     {
         $offset = ($page - 1) * $limit;
+        $whereClauses = [];
+        $params = [];
 
-        $stmt = $this->db->prepare("
-            SELECT * FROM events
-            ORDER BY created_at DESC
-            LIMIT :limit OFFSET :offset
-        ");
+        // Dynamic filters
+        if (!empty($filters['title'])) {
+            $whereClauses[] = "title LIKE :title";
+            $params[':title'] = '%' . $filters['title'] . '%';
+        }
+
+        if (!empty($filters['organizer_name'])) {
+            $whereClauses[] = "organizer_name LIKE :organizer_name";
+            $params[':organizer_name'] = '%' . $filters['organizer_name'] . '%';
+        }
+
+        if (isset($filters['is_approved'])) {
+            $whereClauses[] = "is_approved = :is_approved";
+            $params[':is_approved'] = (bool) $filters['is_approved'];
+        }
+
+        if (!empty($filters['start_date'])) {
+            $whereClauses[] = "start_time >= :start_date";
+            $params[':start_date'] = $filters['start_date'];
+        }
+
+        if (!empty($filters['end_date'])) {
+            $whereClauses[] = "end_time <= :end_date";
+            $params[':end_date'] = $filters['end_date'];
+        }
+
+        $whereSQL = '';
+        if (count($whereClauses)) {
+            $whereSQL = 'WHERE ' . implode(' AND ', $whereClauses);
+        }
+
+        // Fetch events with filters
+        $sql = "
+        SELECT * FROM events
+        $whereSQL
+        ORDER BY created_at DESC
+        LIMIT :limit OFFSET :offset
+    ";
+
+        $stmt = $this->db->prepare($sql);
+
+        // Bind dynamic filters
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
+
         $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Count total
-        $countStmt = $this->db->query("SELECT COUNT(*) FROM events");
+        // Count total matching records
+        $countSql = "SELECT COUNT(*) FROM events $whereSQL";
+        $countStmt = $this->db->prepare($countSql);
+
+        foreach ($params as $key => $value) {
+            $countStmt->bindValue($key, $value);
+        }
+
+        $countStmt->execute();
         $total = $countStmt->fetchColumn();
 
         return [
             'page' => $page,
             'limit' => $limit,
-            'total' => (int)$total,
+            'total' => (int) $total,
             'events' => $events
         ];
     }
+
 
     // Get approved events for calendar (filtered by month/year)
     public function getEventsForCalendar($month = null, $year = null)

@@ -18,10 +18,19 @@ $eventService = new EventService();
 switch ($method) {
     case 'GET':
         // Admin can list all events paginated
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
 
-        $events = $eventService->getEventsAdmin($page, $limit);
+        $filters = [
+            'title' => $_GET['title'] ?? null,
+            'organizer_name' => $_GET['organizer_name'] ?? null,
+            'is_approved' => isset($_GET['is_approved']) ? filter_var($_GET['is_approved'], FILTER_VALIDATE_BOOLEAN) : null,
+            'start_date' => $_GET['start_date'] ?? null,
+            'end_date' => $_GET['end_date'] ?? null,
+        ];
+
+        $events = $eventService->getEventsAdmin($page, $limit, $filters);
+
 
         echo json_encode([
             'message' => 'Admin events fetched successfully',
@@ -35,7 +44,7 @@ switch ($method) {
             echo json_encode(['error' => 'Missing event ID']);
             exit;
         }
-        $id = (int)$_GET['id'];
+        $id = (int) $_GET['id'];
         $data = json_decode(file_get_contents('php://input'), true);
 
         if ($eventService->updateEvent($id, $data)) {
@@ -53,7 +62,7 @@ switch ($method) {
             exit;
         }
 
-        $id = (int)$_GET['id'];
+        $id = (int) $_GET['id'];
 
         if ($eventService->deleteEvent($id)) {
             echo json_encode(['message' => 'Event deleted successfully']);
