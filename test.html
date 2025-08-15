@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Google Auth Example</title>
+    <meta name="theme-color" content="#1bb566">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+
+<body class="bg-light">
+    <div class="container mt-5 text-center">
+        <h1 class="mb-4">Sign in with Google</h1>
+        <div id="g_id_onload" data-client_id="639261611757-7fuu3tbiokaenamjivm2pip09ll76igt.apps.googleusercontent.com"
+            data-callback="handleCredentialResponse" data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline"
+            data-text="signin_with" data-size="large" data-logo_alignment="left">
+        </div>
+    </div>
+
+
+    <div id="userinfo"></div>
+    <div id="idtokenis"></div>
+    
+    <script>
+        // Decode JWT token (ID token)
+        function parseJwt(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+
+            return JSON.parse(jsonPayload);
+        }
+
+        // Handle Google Credential Response
+        function handleCredentialResponse(response) {
+            console.table(response);
+
+            const idToken = response.credential;
+            console.log("Token is:", idToken);
+            document.getElementById('idtokenis').innerHTML = `<p><strong>ID Token:</strong> ${idToken}</p>`;
+
+            // Decode user info from token
+            const user = parseJwt(idToken);
+            console.log("Decoded User Info:");
+            console.table(user)
+            console.log("Name:", user.name);
+            console.log("Email:", user.email);
+            console.log("Picture:", user.picture);
+
+            // Optionally display on UI
+            document.getElementById('userinfo').innerHTML = `
+      <p><strong>Name:</strong> ${user.name}</p>
+      <p><strong>Email:</strong> ${user.email}</p>
+      <img src="${user.picture}" alt="Profile" style="width:100px; border-radius:50%;">
+    `;
+
+            // Send ID token to your backend
+            fetch('http://localhost/election-app-api/auth/google', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id_token: idToken })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    console.log('Server Response:', data);
+                    alert(data.message || 'Login successful!');
+                })
+                .catch(err => {
+                    console.error('Login failed:', err);
+                    alert('Login failed.');
+                });
+        }
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
