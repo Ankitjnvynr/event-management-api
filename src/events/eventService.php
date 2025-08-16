@@ -19,11 +19,11 @@ class EventService
             INSERT INTO events (
                 title, description, start_time, end_time, is_all_day, location,
                 color, organizer_name, contact_phone, contact_email,
-                website_url, registration_link, external_links, is_approved
+                website_url, registration_link, external_links, is_approved,featured_image
             ) VALUES (
                 :title, :description, :start_time, :end_time, :is_all_day, :location,
                 :color, :organizer_name, :contact_phone, :contact_email,
-                :website_url, :registration_link, :external_links, :is_approved
+                :website_url, :registration_link, :external_links, :is_approved, :featured_image
             )
         ");
 
@@ -41,7 +41,8 @@ class EventService
             ':website_url' => $data['website_url'] ?? null,
             ':registration_link' => $data['registration_link'] ?? null,
             ':external_links' => $data['external_links'] ?? null,
-            ':is_approved' => $data['is_approved'] ?? false
+            ':is_approved' => $data['is_approved'] ?? false,
+            ':featured_image' => $data['featured_image'] ?? null
         ]);
     }
 
@@ -164,6 +165,7 @@ class EventService
             UPDATE events SET
                 title = :title,
                 description = :description,
+                featured_image=:featured_image,
                 start_time = :start_time,
                 end_time = :end_time,
                 is_all_day = :is_all_day,
@@ -184,6 +186,7 @@ class EventService
             ':id' => $id,
             ':title' => $data['title'],
             ':description' => $data['description'] ?? null,
+            ':featured_image'=>$data['featured_image'] ?? null,
             ':start_time' => $data['start_time'],
             ':end_time' => $data['end_time'],
             ':is_all_day' => $data['is_all_day'] ?? false,

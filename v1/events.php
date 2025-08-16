@@ -65,7 +65,8 @@ switch ($method) {
             'contact_email',
             'website_url',
             'registration_link',
-            'external_links'
+            'external_links',
+            'featured_image'
         ];
 
         foreach ($optionalFields as $field) {

@@ -82,3 +82,8 @@ $createEventsTableSql = 'CREATE TABLE IF NOT EXISTS events (
 )';
 
 $db->createTable($createEventsTableSql);
+
+$updateEventTableSql = "ALTER TABLE events 
+    ADD COLUMN featured_image VARCHAR(255) DEFAULT NULL AFTER description";
+
+$db->createTable($updateEventTableSql);
