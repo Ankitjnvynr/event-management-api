@@ -5,12 +5,12 @@ require_once __DIR__ . '/../src/events/eventService.php';
 
 header('Content-Type: application/json');
 
-// $user = authenticate();
-// if ($user->role !== 'admin') {
-//     http_response_code(403);
-//     echo json_encode(['error' => 'Access denied']);
-//     exit;
-// }
+$user = authenticate();
+if ($user->role !== 'admin') {
+    http_response_code(403);
+    echo json_encode(['error' => 'Access denied']);
+    exit;
+}
 
 $method = $_SERVER['REQUEST_METHOD'];
 $eventService = new EventService();
