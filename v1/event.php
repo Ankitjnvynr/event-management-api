@@ -24,7 +24,7 @@ switch ($method) {
         $filters = [
             'title' => $_GET['title'] ?? null,
             'organizer_name' => $_GET['organizer_name'] ?? null,
-            'is_approved' => (isset($_GET['is_approved']) && $_GET['is_approved'] != '' ) ? filter_var($_GET['is_approved'], FILTER_VALIDATE_BOOLEAN) : null,
+            'is_approved' => (isset($_GET['is_approved']) && $_GET['is_approved'] != '') ? filter_var($_GET['is_approved'], FILTER_VALIDATE_BOOLEAN) : null,
             'start_date' => $_GET['start_date'] ?? null,
             'end_date' => $_GET['end_date'] ?? null,
         ];
@@ -44,8 +44,38 @@ switch ($method) {
             echo json_encode(['error' => 'Missing event ID']);
             exit;
         }
+
         $id = (int) $_GET['id'];
         $data = json_decode(file_get_contents('php://input'), true);
+
+        if (!$data) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid input data']);
+            exit;
+        }
+
+        // Fetch the existing event first
+        $existingEvent = $eventService->getEventById($id);
+        if (!$existingEvent) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Event not found']);
+            exit;
+        }
+
+        // Check if featured_image is being updated
+        if (!isset($data['featured_image']) || empty($data['featured_image'])) {
+            // Keep existing file if user didn't send new one
+            $data['featured_image'] = $existingEvent['featured_image'];
+        } else {
+            // If a new file name is passed (uploaded earlier),
+            // remove the old one if it exists and is different
+            if (
+                !empty($existingEvent['featured_image']) &&
+                $existingEvent['featured_image'] !== $data['featured_image']
+            ) {
+                removeFile($existingEvent['featured_image'], 'events');
+            }
+        }
 
         if ($eventService->updateEvent($id, $data)) {
             echo json_encode(['message' => 'Event updated successfully']);
@@ -54,6 +84,7 @@ switch ($method) {
             echo json_encode(['error' => 'Failed to update event']);
         }
         break;
+
 
     case 'DELETE':
         if (!isset($_GET['id'])) {
