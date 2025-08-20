@@ -82,6 +82,7 @@ switch ($method) {
         } else {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to update event']);
+            removeFile($data['featured_image'], 'events');
         }
         break;
 
