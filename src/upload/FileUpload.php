@@ -48,3 +48,23 @@ function upload($file, $uploadFolder = '')
 
 
 }
+
+
+
+
+function removeFile($filename, $uploadFolder = '')
+{
+    $uploadDir = __DIR__ . "../../../uploads/" . $uploadFolder . "/";
+
+    $filePath = $uploadDir . $filename;
+
+    if (file_exists($filePath)) {
+        if (unlink($filePath)) {
+            return ["status" => true, "message" => "File removed successfully."];
+        } else {
+            return ["status" => false, "message" => "Failed to remove file."];
+        }
+    } else {
+        return ["status" => false, "message" => "File does not exist."];
+    }
+}

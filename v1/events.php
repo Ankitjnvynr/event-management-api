@@ -40,23 +40,27 @@ switch ($method) {
 
     case 'POST':
 
+        $uploadedFile = null;
+
+        // Handle optional file upload
         if (isset($_FILES['eventImg']) && $_FILES['eventImg']['error'] === UPLOAD_ERR_OK) {
-                $uploadedFile = upload($_FILES['eventImg'],'events');
-                if(!$uploadedFile['status']){
-                    echo json_encode([
-                        'status'=>false,
-                        'message'=>$uploadedFile['message']
-                    ]);
-                }
-                $_POST['featured_image'] = $uploadedFile['filename'];
+            $uploadedFile = upload($_FILES['eventImg'], 'events');
+            if (!$uploadedFile['status']) {
+                http_response_code(400);
+                echo json_encode([
+                    'status' => false,
+                    'message' => $uploadedFile['message']
+                ]);
+                exit;
+            }
+            $_POST['featured_image'] = $uploadedFile['filename'];
         }
-       
-        print_r($_POST);
-        exit;
 
-
-
+        // Handle input data (JSON or form-data fallback)
         $data = json_decode(file_get_contents('php://input'), true);
+        if (!$data) {
+            $data = $_POST;
+        }
 
         // Required fields
         $requiredFields = ['title', 'start_time', 'end_time'];
@@ -65,6 +69,11 @@ switch ($method) {
             if (empty($data[$field])) {
                 http_response_code(400);
                 echo json_encode(['error' => "Missing required field: $field"]);
+
+                // Clean up uploaded file if exists
+                if (!empty($uploadedFile['filename'])) {
+                    removeFile($uploadedFile['filename'], 'events');
+                }
                 exit;
             }
         }
@@ -72,7 +81,7 @@ switch ($method) {
         // Set default value for approval
         $data['is_approved'] = false;
 
-        // Optional: Set defaults for optional fields if not set
+        // Optional fields
         $optionalFields = [
             'description',
             'is_all_day',
@@ -93,11 +102,17 @@ switch ($method) {
             }
         }
 
+        // Create event
         if ($eventService->createEvent($data)) {
             echo json_encode(['message' => 'Event created successfully and pending approval']);
         } else {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to create event']);
+
+            // Clean up uploaded file if DB save failed
+            if (!empty($uploadedFile['filename'])) {
+                removeFile($uploadedFile['filename'], 'events');
+            }
         }
         break;
 
