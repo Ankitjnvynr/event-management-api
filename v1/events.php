@@ -40,8 +40,8 @@ switch ($method) {
 
     case 'POST':
 
-        if(isset($_POST['eventImg'])){
-                $uploadedFile = upload($_POST['eventImg'],'events');
+        if (isset($_FILES['eventImg']) && $_FILES['eventImg']['error'] === UPLOAD_ERR_OK) {
+                $uploadedFile = upload($_FILES['eventImg'],'events');
                 if(!$uploadedFile['status']){
                     echo json_encode([
                         'status'=>false,
@@ -50,6 +50,11 @@ switch ($method) {
                 }
                 $_POST['featured_image'] = $uploadedFile['filename'];
         }
+       
+        print_r($_POST);
+        exit;
+
+
 
         $data = json_decode(file_get_contents('php://input'), true);
 

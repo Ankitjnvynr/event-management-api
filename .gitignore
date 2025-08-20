@@ -3,3 +3,4 @@ vendor
 /.env
 env
 vendor.zip
+uploads/*
