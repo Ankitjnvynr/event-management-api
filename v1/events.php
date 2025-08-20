@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../src/middlewares/cors.php';
 require_once __DIR__ . '/../src/events/eventService.php';
+require_once __DIR__ . '/../src/upload/FileUpload.php';
 
 header('Content-Type: application/json');
 
@@ -38,6 +39,18 @@ switch ($method) {
         break;
 
     case 'POST':
+
+        if(isset($_POST['eventImg'])){
+                $uploadedFile = upload($_POST['eventImg'],'events');
+                if(!$uploadedFile['status']){
+                    echo json_encode([
+                        'status'=>false,
+                        'message'=>$uploadedFile['message']
+                    ]);
+                }
+                $_POST['featured_image'] = $uploadedFile['filename'];
+        }
+
         $data = json_decode(file_get_contents('php://input'), true);
 
         // Required fields
